@@ -1,0 +1,50 @@
+# CPU Load Monitoring Web Application
+
+This is a proof-of-concept (POC) CPU Load Monitoring web application built using React, Node.js, and TypeScript. The app renders real-time CPU load data and alerts the user when the CPU is under heavy load or has recovered.
+
+## Features
+
+- Displays the current average CPU load.
+- Shows the average CPU load change over a 10-minute window.
+- Alerts when the CPU has been under heavy load for 2 minutes or more.
+- Alerts when the CPU load has recovered.
+- Communicates with a local backend service to retrieve CPU load information every 10 seconds.
+
+## Project Structure
+
+- `server/`: Contains the Node.js server that fetches CPU load data.
+- `client/`: Contains the React frontend that renders the data and alerts.
+
+## Prerequisites
+
+- Node.js (my version is 22.8.0)
+- npm (my version is 10.8.2)
+
+## Getting Started
+
+Follow the instructions below to clone and run the application locally.
+
+### 1. Clone the Repository
+
+```bash
+git clone <insert repository URL here later>
+cd cpu-load-monitor
+```
+
+## How To Run Unit Tests
+
+Run `npm test` from the `client` directory
+
+## Future Improvements
+
+If this application were to be extended for production use, it could use a few modifications:
+
+- Persistence: Use a database to persist the historical CPU load data so that it's not lost. Can use this info for other purposes like detecting patterns in load over time or during specific times of the day
+- Communication: Use WebSockets instead of polling for real-time updates
+- UI/UX: Use D3 instead of/in conjunction with Highcharts for more advanced and varied data visualizations
+- Security: Implement authentication so that CPU load data is not publicly visible (this information could be useful to hackers looking to overload an entity's server with network traffic as a form of DoS attack) 
+- Logging: Log errors/alerts in Datadog for long-term monitoring and searching
+
+## Contact
+
+For any inquiries or suggestions, feel free to reach out to me at [ar2au@virginia.edu].
