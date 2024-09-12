@@ -1,6 +1,6 @@
 # CPU Load Monitoring Web Application
 
-This is a proof-of-concept (POC) CPU Load Monitoring web application built using React, Node.js, and TypeScript. The app renders real-time CPU load data and alerts the user when the CPU is under heavy load or has recovered.
+This is a CPU Load Monitoring web application built using React, Node.js, and TypeScript. The app renders real-time CPU load data and alerts the user when the CPU is under heavy load or has recovered.
 
 ## Features
 
@@ -27,9 +27,39 @@ Follow the instructions below to clone and run the application locally.
 ### 1. Clone the Repository
 
 ```bash
-git clone <insert repository URL here later>
+git clone https://github.com/aravi3/cpu-load-monitor.git
 cd cpu-load-monitor
 ```
+
+### 2. Install Packages
+
+From root directory:
+
+```bash
+npm install
+```
+
+### 3. Start Application
+
+From root directory:
+
+```bash
+npm start
+```
+
+## How To Test the Application
+
+To test your application, and spike up your CPU load, you can use the following command:
+
+`yes > /dev/null`
+
+Run it multiple times to stress test each CPU core, if you like:
+
+`yes > /dev/null & yes > /dev/null & yes > /dev/null & yes > /dev/null`
+
+When you're done, kill all the processes with this:
+
+`killall -HUP yes`
 
 ## How To Run Unit Tests
 
