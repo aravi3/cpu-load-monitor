@@ -1,18 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Highcharts from 'highcharts';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Highcharts, { Options } from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+import AccessibilityModule from 'highcharts/modules/accessibility';
 import { fetchData, getTimeElapsedInMinutes } from '../utils';
 import './styles/CPULoadMonitor.css';
 
+export const CHART_TITLE = 'Load Every 10s Over the Last 10 min';
 const POLL_INTERVAL = 10000;
 const LENGTH_OF_HISTORICAL_WINDOW = 60;
+const LOAD_ALERT_THRESHOLD = 1;
 
-const chartOptions = {
+AccessibilityModule(Highcharts);
+
+const chartOptions: Options = {
     chart: {
         type: 'line'
     },
     title: {
-        text: 'CPU Load Every 10s Over the Last 10 min'
+        text: CHART_TITLE
     },
     xAxis: {
         title: {
@@ -20,13 +25,18 @@ const chartOptions = {
         },
         labels: {
             formatter: function() {
-                return (this as any).value.toFixed(2);
+                return (this.value as number).toFixed(2);
             }
         }
     },
     yAxis: {
         title: {
             text: 'Load Avg'
+        },
+        labels: {
+            formatter: function() {
+                return (this.value as number).toFixed(3);
+            }
         }
     },
     legend: {
@@ -34,7 +44,7 @@ const chartOptions = {
     },
     tooltip: {
         pointFormatter: function() {
-            return (this as any).y.toFixed(4);
+            return (this.y as number).toFixed(4);
         }
     }
 };
@@ -47,13 +57,17 @@ interface LoadData {
 const CPULoadMonitor: React.FC = () => {
     const [loadData, setLoadData] = useState<LoadData>({ timestamps: [], loadAverages: [] });
     const [alertMode, setAlertMode] = useState<boolean>(false);
+    const [dateTimesOfAlerts, setDateTimesOfAlerts] = useState<string[]>([]);
+    const [dateTimesOfRecoveries, setDateTimesOfRecoveries] = useState<string[]>([]);
 
     const startingTimestampOfApplication = useRef<number | null>(null);
-    const startingTimestampOfAlert = useRef<number | null>(null);
+    const startingTimestampOfAlertOrRecovery = useRef<number | null>(null);
 
     const fetchLoadMonitorData = async () => {
-        const response = await fetchData('/cpu-load');
-        setLoadData((prev) => {
+        const { loadAverage } = await fetchData('/cpu-load');
+
+        setLoadData(prev => {
+            // Retain existing loadAverages and timestamps
             const loadAverages = [...prev.loadAverages];
             const timestamps = [...prev.timestamps];
 
@@ -64,69 +78,87 @@ const CPULoadMonitor: React.FC = () => {
             }
 
             // Adding the new data point
-            loadAverages.push(response.loadAverage);
+            loadAverages.push(loadAverage);
             const minutes = getTimeElapsedInMinutes(startingTimestampOfApplication.current);
-            const roundedMinutes = Math.round(minutes * 10) / 10;
+            const roundedMinutes = Math.round(minutes * 1000) / 1000;
             timestamps.push(roundedMinutes);
 
             // Timestamp in minutes is the X axis and load average is the Y axis
             return { timestamps, loadAverages };
         });
+
+        return loadAverage;
     };
 
-    const isUnderHighLoad = () => {
-        const mostRecentLoad = loadData.loadAverages[loadData.loadAverages.length - 1];
-
+    const checkIfUnderHighLoad = useCallback((mostRecentLoad: number) => {
         if (!alertMode) {
-            // A CPU is considered under high average load when it has exceeded 1 for 2 minutes or more
-            if (mostRecentLoad > 1) {
-                if (startingTimestampOfAlert.current) {
-                    const timeElapsed = getTimeElapsedInMinutes(startingTimestampOfAlert.current);
+            // A CPU is considered under high average load when >= 1 for 2 minutes or more
+            if (mostRecentLoad >= LOAD_ALERT_THRESHOLD) {
+                if (startingTimestampOfAlertOrRecovery.current) {
+                    const timeElapsed = getTimeElapsedInMinutes(startingTimestampOfAlertOrRecovery.current);
+
                     if (timeElapsed >= 2) {
+                        startingTimestampOfAlertOrRecovery.current = null;
+                        const todaysDate = new Date(); 
+                        const todaysDateStr = todaysDate.toLocaleString();
+                        setDateTimesOfAlerts(prev => [...prev, todaysDateStr]);
                         setAlertMode(true);
-                        // Show a pop up to the user at the start of the alert window
-                        alert('CPU under heavy load');
                     }
                 } else {
-                    startingTimestampOfAlert.current = Date.now();
+                    startingTimestampOfAlertOrRecovery.current = Date.now();
                 }
             } else {
-                startingTimestampOfAlert.current = null;
+                startingTimestampOfAlertOrRecovery.current = null;
             }
         } else {
-            // A CPU is considered recovered from high average load when it drops below 1 for 2 minutes or more
-            if (mostRecentLoad < 1) {
-                if (startingTimestampOfAlert.current) {
-                    const timeElapsed = getTimeElapsedInMinutes(startingTimestampOfAlert.current);
+            // A CPU is considered recovered from high average load when < 1 for 2 minutes or more
+            if (mostRecentLoad < LOAD_ALERT_THRESHOLD) {
+                if (startingTimestampOfAlertOrRecovery.current) {
+                    const timeElapsed = getTimeElapsedInMinutes(startingTimestampOfAlertOrRecovery.current);
+
                     if (timeElapsed >= 2) {
+                        startingTimestampOfAlertOrRecovery.current = null;
+                        const todaysDate = new Date(); 
+                        const todaysDateStr = todaysDate.toLocaleString();
+                        setDateTimesOfRecoveries(prev => [...prev, todaysDateStr]);
                         setAlertMode(false);
-                        // Show a pop up to the user at the start of the recovery window
-                        alert('CPU recovered from heavy load');
                     }
                 } else {
-                    startingTimestampOfAlert.current = Date.now();
+                    startingTimestampOfAlertOrRecovery.current = Date.now();
                 }
             } else {
-                startingTimestampOfAlert.current = null;
+                startingTimestampOfAlertOrRecovery.current = null;
             }
         }
-    }
+    }, [alertMode]);
+
+    useEffect(() => {
+        // Record application start time on component mount
+        startingTimestampOfApplication.current = Date.now();
+    }, []);
 
     // Poll load average every 10 seconds
     useEffect(() => {
-        const intervalId = setInterval(fetchLoadMonitorData, POLL_INTERVAL);
-        startingTimestampOfApplication.current = Date.now();
+        const intervalId = setInterval(async () => {
+            const newLoadAverage = await fetchLoadMonitorData();
+            checkIfUnderHighLoad(newLoadAverage);
+        }, POLL_INTERVAL);
         return () => clearInterval(intervalId);
-    }, []);
-
-    // Check high load status every time we receive a new data point from the backend
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(isUnderHighLoad, [loadData.loadAverages]);
+    }, [checkIfUnderHighLoad]);
 
     const alertBoxLabel = alertMode ? 'Alert' : 'All Clear';
     const alertBoxClass = alertMode ? 'alert-box' : 'all-clear-box';
 
     const currentLoad = Math.round(loadData.loadAverages[loadData.loadAverages.length - 1] * 1000) / 1000;
+
+    const rowsOfAlerts = dateTimesOfAlerts.map((dateTime, idx) => (
+            <tr key={`alert-times-${idx}`}><td>{dateTime}</td></tr>
+        )
+    );
+    const rowsOfRecoveries = dateTimesOfRecoveries.map((dateTime, idx) => (
+            <tr key={`recovery-times-${idx}`}><td>{dateTime}</td></tr>
+        )
+    );
 
     return (
         <>
@@ -137,7 +169,10 @@ const CPULoadMonitor: React.FC = () => {
                 {alertBoxLabel}
             </div>
 
-            <h1>CPU Load Average Monitor, Current: {currentLoad}</h1>
+            <h1>CPU Load Avg Monitor</h1>
+            <h3 className={currentLoad < LOAD_ALERT_THRESHOLD ? 'normal-load-text' : 'warning-load-text'}>
+                Current: {currentLoad}
+            </h3>
 
             <HighchartsReact 
                 highcharts={Highcharts}
@@ -156,11 +191,22 @@ const CPULoadMonitor: React.FC = () => {
                 }}
             />
 
+            <div className='table-container'>
+                <table>
+                    <thead><tr><th>Alerts: {rowsOfAlerts.length} total</th></tr></thead>
+                    <tbody>{rowsOfAlerts}</tbody>
+                </table>
+                <table>
+                    <thead><tr><th>Recoveries: {rowsOfRecoveries.length} total</th></tr></thead>
+                    <tbody>{rowsOfRecoveries}</tbody>
+                </table>
+            </div>
+
             <div className='footer'>
-                * A CPU is considered under high average load when it has <b>exceeded 1 for 2 minutes</b> or more
+                * A CPU is considered under high average load when &gt;= 1 for 2 minutes or more
             </div>
             <div className='footer'>
-                * A CPU is considered recovered from high average load when it <b>drops below 1 for 2 minutes</b> or more
+                * A CPU is considered recovered from high average load when &lt; 1 for 2 minutes or more
             </div>
         </>
     );

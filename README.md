@@ -4,16 +4,16 @@ This is a CPU Load Monitoring web application built using React, Node.js, and Ty
 
 ## Features
 
-- Displays the current average CPU load.
-- Shows the average CPU load change over a 10-minute window.
-- Alerts when the CPU has been under heavy load for 2 minutes or more.
-- Alerts when the CPU load has recovered.
-- Communicates with a local backend service to retrieve CPU load information every 10 seconds.
+- Displays the current average CPU load
+- Shows the average CPU load change over a 10 minute window
+- Alerts when the CPU has been under heavy load for 2 minutes or more
+- Alerts when the CPU load has recovered
+- Communicates with a local backend service to retrieve CPU load information every 10 seconds
 
 ## Project Structure
 
-- `server/`: Contains the Node.js server that fetches CPU load data.
-- `client/`: Contains the React frontend that renders the data and alerts.
+- `server/`: Contains the Node.js server that fetches CPU load data
+- `client/`: Contains the React frontend that renders the data and alerts
 
 ## Prerequisites
 
@@ -69,11 +69,11 @@ Run `npm test` from the `client` directory
 
 If this application were to be extended for production use, it could use a few modifications:
 
-- Persistence: Use a database to persist the historical CPU load data so that it's not lost. Can use this info for other purposes like detecting patterns in load over time or during specific times of the day
-- Communication: Use WebSockets instead of polling for real-time updates
-- UI/UX: Use D3 instead of/in conjunction with Highcharts for more advanced and varied data visualizations
-- Security: Implement authentication so that CPU load data is not publicly visible (this information could be useful to hackers looking to overload an entity's server with network traffic as a form of DoS attack) 
-- Logging: Log errors/alerts in Datadog for long-term monitoring and searching
+- Persistence: Use a database to persist the historical CPU load data so that it's not lost. This info can be used for other purposes later, such as detecting patterns in load over time or during specific times of the day.
+- Communication: Use WebSockets instead of polling for real-time updates.
+- UI/UX: Use D3 instead of/in conjunction with Highcharts for more advanced and varied data visualizations.
+- Security: Implement authentication so that CPU load data is not publicly visible (this information could be useful to hackers looking to overload an entity's server with network traffic as a form of DoS attack). 
+- Logging: Log errors/alerts in Datadog for ease of long-term monitoring and searching.
 
 ## Contact
 
