@@ -2,6 +2,8 @@
 
 This is a CPU Load Monitoring web application built using React, Node.js, and TypeScript. The app renders real-time CPU load data and alerts the user when the CPU is under heavy load or has recovered.
 
+![MainPic](https://res.cloudinary.com/dnj5rmvun/image/upload/v1726534862/main_screen_cpu_load_xkvuli.jpg)
+
 ## Features
 
 - Displays the current average CPU load
