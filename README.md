@@ -1,4 +1,4 @@
-# CPU Load Monitoring Web Application
+# CPU Load Monitoring
 
 This is a CPU Load Monitoring web application built using React, Node.js, and TypeScript. The app renders real-time CPU load data and alerts the user when the CPU is under heavy load or has recovered.
 
