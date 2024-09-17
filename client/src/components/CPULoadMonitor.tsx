@@ -192,11 +192,11 @@ const CPULoadMonitor: React.FC = () => {
             />
 
             <div className='table-container'>
-                <table>
+                <table border={1}>
                     <thead><tr><th>Alerts: {rowsOfAlerts.length} total</th></tr></thead>
                     <tbody>{rowsOfAlerts}</tbody>
                 </table>
-                <table>
+                <table border={1}>
                     <thead><tr><th>Recoveries: {rowsOfRecoveries.length} total</th></tr></thead>
                     <tbody>{rowsOfRecoveries}</tbody>
                 </table>
