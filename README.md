@@ -63,7 +63,7 @@ When you're done, kill all the processes with this:
 
 ## How To Run Unit Tests
 
-Run `npm test` from the `client` directory
+Run `npm test` from the `client` directory and press `a` to run all tests
 
 ## Future Improvements
 
